@@ -29,6 +29,12 @@ math: mathjax
 5. CRANに関する補足
 
 ---
+# 下記はテストを自動化できていない
+1. 関数を書く
+2. `devtools::load_all()`でその関数をロードする
+3. コンソールで動作を確認する
+4. 完成するまでこの流れを繰り返す
+---
 <!-- footer: testthat.R -->
 ~~~R
 library(testthat)# install.packages("testthat")
@@ -306,4 +312,35 @@ Failure (test-kakezan.R:4:3): caluculation is correct
 Duration: 1.1 s
 
 [ FAIL 1 | WARN 3 | SKIP 0 | PASS 2 ]
+~~~
+
+---
+<!-- footer: "https://r-pkgs.org/testing-basics.html" -->
+- Micro-iteration / Mezzo-iteration / Macro-iteration
+~~~R
+# tweak the foofy() function and re-load it
+devtools::load_all()
+# interactively explore and refine expectations and tests
+expect_equal(foofy(...), EXPECTED_FOOFY_OUTPUT)
+test_that("foofy does good things", {...})
+~~~
+~~~R
+testthat::test_file("tests/testthat/test-foofy.R")
+~~~
+~~~R
+devtools::test()
+devtools::check()
+~~~
+
+---
+<!-- footer: "https://r-pkgs.org/testing-design.html" -->
+# テストカバレッジ`covr`
+- ローカルでインタラクティブな使用
+~~~R
+> devtools::test_coverage_active_file(file = "./R/kakezan.R")
+> devtools::test_coverage()
+~~~
+- GitHub Actions (GHA) による自動的なリモート使用
+~~~R
+usethis::use_github_action("test-coverage")
 ~~~
