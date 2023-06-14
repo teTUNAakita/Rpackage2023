@@ -218,3 +218,92 @@ test_that("unbiasedness of statistics", { # ヘルバー関数の作成
 - 短時間で完了するテスト
 - 英語環境`LANGUAGE=EN`およびCソート`LC_COLLATE=C`で
 - 数値の精度がプラットフォーム依存なので、`identical`系は避け`equal`系を
+
+---
+# ここからは教科書外の内容（一部最新版）
+
+- 実際にRパッケージを開発して、testthatがどう機能するか見てみる
+
+---
+新しいパッケージのdirectoryにいることを確認しつつ
+~~~R
+> library(usethis)
+> usethis::use_testthat()
+✔ Adding 'testthat' to Suggests field in DESCRIPTION
+✔ Adding '3' to Config/testthat/edition
+✔ Creating 'tests/testthat/'
+✔ Writing 'tests/testthat.R'
+• Call `use_test()` to initialize a basic test file and open it for editing.
+~~~
+
+---
+<!-- footer: "DESCRIPTION" -->
+~~~R
+Package: kerokero
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Author: Who wrote it
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+~~~
+
+---
+<!-- footer: "tests/testthat.R" -->
+~~~R
+# This file is part of the standard setup for testthat.
+# It is recommended that you do not modify it.
+#
+# Where should you do additional test configuration?
+# Learn more about the roles of various files in:
+# * https://r-pkgs.org/testing-design.html#sec-tests-files-overview
+# * https://testthat.r-lib.org/articles/special-files.html
+
+library(testthat)
+library(kerokero)
+
+test_check("kerokero")
+~~~
+
+---
+<!-- footer: "tests/testthat/test-kakezan.R" -->
+~~~R
+# library(testthat)しちゃだめ
+test_that("caluculation is correct", {
+  expect_that(kakezan(1,2), equals(2))
+  expect_that(kakezan(1,2), equals(2+1e-8))
+  expect_that(kakezan(1,2), equals(2+1e-7))
+})
+~~~
+
+---
+<!-- footer: "" -->
+~~~R
+> devtools::test()
+ℹ Testing kerokero
+✔ | F W S  OK | Context
+✖ | 1 3     2 | kakezan [0.5s]                                                   
+────────────────────────
+Warning (test-kakezan.R:2:3): caluculation is correct
+`expect_that()` was deprecated in the 3rd edition.
+
+Failure (test-kakezan.R:4:3): caluculation is correct
+`x` (`actual`) not equal to `expected` (`expected`).
+
+  `actual`: 2.0000000
+`expected`: 2.0000001
+────────────────────────
+
+══ Results ══
+Duration: 1.1 s
+
+[ FAIL 1 | WARN 3 | SKIP 0 | PASS 2 ]
+~~~
