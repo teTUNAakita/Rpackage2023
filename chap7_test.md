@@ -344,3 +344,92 @@ devtools::check()
 ~~~R
 usethis::use_github_action("test-coverage")
 ~~~
+
+---
+<!-- footer: "" -->
+# High-level principles for testing
+- self-sufficient and self-contained
+- interactive workflow
+- obvious >> DRY (don't repeat yourself)
+- interactive workflow shouldn’t “leak” into and undermine the test suite.
+
+---
+# Self-sufficient tests
+- test_that()の外にあるコードは排除すべき
+~~~R
+dat <- data.frame(x= c("a","b","c"), y= c(1,2,3))
+skip_if(today_is_a_monday())
+test_that("foofy() does this",{)
+expect_equal(foofy(dat),...)
+})
+
+dat2 <- data.frame(x= c("x","y","z"), y= c(4,5,6))
+skip_on_os("windows")
+test_that("foofy2() does that",{)
+expect_snapshot(foofy2(dat,dat2))
+})
+~~~
+
+---
+~~~R
+test_that("foofy() does this",{
+skip_if(today_is_a_monday())  
+dat <- data.frame(x= c("a","b","c"), y= c(1,2,3))  
+expect_equal(foofy(dat),...)
+})
+
+test_that("foofy() does that",{
+skip_if(today_is_a_monday())
+skip_on_os("windows")  
+dat <- data.frame(x= c("a","b","c"), y= c(1,2,3))
+dat2 <- data.frame(x= c("x","y","z"), y= c(4,5,6))  
+expect_snapshot(foofy(dat,dat2))
+})
+~~~
+
+---
+# Self-contained tests
+- テストの中で作成したRオブジェクトは、テスト終了後には通常存在しない
+- `library()`、`options()`、`Sys.setenv()`などの呼び出しが、`test_that()`の中で実行されると、テスト終了後も影響する
+- `withr` package
+
+---
+~~~R
+grep("jsonlite", search(), value = TRUE)
+#> character(0)
+getOption("opt_whatever")
+#> NULL
+Sys.getenv("envvar_whatever")
+#> [1] ""
+test_that("withr makes landscape changes local to a test", {
+  withr::local_package("jsonlite")
+  withr::local_options(opt_whatever = "whatever")
+  withr::local_envvar(envvar_whatever = "whatever")
+  expect_match(search(), "jsonlite", all = FALSE)
+  expect_equal(getOption("opt_whatever"), "whatever")
+  expect_equal(Sys.getenv("envvar_whatever"), "whatever")
+})
+#> Test passed 🎊
+grep("jsonlite", search(), value = TRUE)
+#> character(0)
+getOption("opt_whatever")
+#> NULL
+Sys.getenv("envvar_whatever")
+#> [1] ""
+~~~
+
+---
+# 繰り返してもOK
+~~~R
+test_that("掛け算が効く",{)
+useful_thing <- 3
+expect_equal(2 * useful_thing,6)
+})
+#> テスト合格 😸。
+
+test_that("subtraction works",{)
+useful_thing <- 3
+expect_equal(5 - useful_thing,2)
+})
+#> テスト合格しました🎊。
+~~~
